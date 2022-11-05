@@ -37,19 +37,6 @@ router.get("/:id", async (req, res) => {
 
 // create new product
 router.post("/", async (req, res) => {
-  // const { product_name, price, stock, tagIds } = req.body;
-  // try {
-  //   const productData = await Product.create({
-  //     product_name,
-  //     price,
-  //     stock,
-  //     tagIds,
-  //   });
-  //   res.status(200).json(productData);
-  // } catch (err) {
-  //   res.status(400).json(err);
-  // }
-
   Product.create(req.body)
     .then((product) => {
       // if there's product tags, we need to create pairings to bulk create in the ProductTag model
@@ -82,7 +69,9 @@ router.put("/:id", (req, res) => {
   })
     .then((product) => {
       // find all associated tags from ProductTag
-      return ProductTag.findAll({ where: { product_id: req.params.id } });
+      return ProductTag.findAll({
+        where: { product_id: req.params.id },
+      });
     })
     .then((productTags) => {
       // get list of current tag_ids
@@ -96,12 +85,12 @@ router.put("/:id", (req, res) => {
             tag_id,
           };
         });
-      // figure out which ones to remove
+      //figure out which ones to remove
       const productTagsToRemove = productTags
         .filter(({ tag_id }) => !req.body.tagIds.includes(tag_id))
         .map(({ id }) => id);
 
-      // run both actions
+      //run both actions
       return Promise.all([
         ProductTag.destroy({ where: { id: productTagsToRemove } }),
         ProductTag.bulkCreate(newProductTags),
@@ -109,7 +98,7 @@ router.put("/:id", (req, res) => {
     })
     .then((updatedProductTags) => res.json(updatedProductTags))
     .catch((err) => {
-      // console.log(err);
+      console.log(err);
       res.status(400).json(err);
     });
 });
@@ -125,6 +114,7 @@ router.delete("/:id", async (req, res) => {
 
     if (!productData) {
       res.status(404).json({ message: "No product with that ID found" });
+      return;
     }
     res.status(200).json(productData);
   } catch (err) {
